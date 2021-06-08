@@ -4,7 +4,6 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
@@ -13,70 +12,50 @@ import com.couchbase.clinic.models.Department;
 import com.couchbase.clinic.models.Doctor;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class Main {
-/*
-    // Initialize the Connection
-    Cluster cluster = CouchbaseCluster.create("localhost");
+    public static void main(String[] args) throws IOException {
+        // Initialize the Connection
+        Cluster cluster = CouchbaseCluster.create("localhost");
         cluster.authenticate("admin", "adminadmin");
-    Bucket bucket = cluster.openBucket("bucketname");
-
-    // Create a JSON Document
-    JsonObject arthur = JsonObject.create()
-            .put("name", "Arthur")
-            .put("email", "kingarthur@couchbase.com")
-            .put("interests", JsonArray.from("Holy Grail", "African Swallows"));
-
-    // Store the Document
-    String id = String.valueOf(UUID.randomUUID());
-        bucket.upsert(JsonDocument.create(id, arthur));
-
-    // Load the Document and print it
-    // Prints Content and Metadata of the stored Document
-        System.out.println(bucket.get(id));*/
-public static void main(String[] args) throws IOException {
-    // Initialize the Connection
-    Cluster cluster = CouchbaseCluster.create("localhost");
-    cluster.authenticate("admin", "adminadmin");
-    Bucket doctorsMap = cluster.openBucket("doctors");
-    Bucket departmentsMap = cluster.openBucket("departments");
-    while (true) {
-        Integer choice = printMenu();
-        clearScreen();
-        System.out.println(choice);
-        if (choice > 0 && choice < 9) {
-            switch (choice) {
-                case 1:
-                    addElementToDatabase(doctorsMap, departmentsMap);
-                    break;
-                case 2:
-/*                    editElement(doctorsMap, departmentsMap);*/
-                    break;
-                case 3:
-                    getElementById(doctorsMap, departmentsMap);
-                    break;
-                case 4:
-                    getAll(doctorsMap, departmentsMap);
-                    break;
-                case 5:
-                    removeElement(doctorsMap, departmentsMap);
-                    break;
-                case 6:
-/*                    setSalary(doctorsMap);*/
-                    break;
-                case 7:
-                    getElementByName(doctorsMap, departmentsMap);
-                    break;
-            }
-            System.out.println("Press enter to continue...");
-            System.in.read();
-        } else System.out.println("Wrong number, choose again.");
+        Bucket doctorsMap = cluster.openBucket("doctors");
+        Bucket departmentsMap = cluster.openBucket("departments");
+        while (true) {
+            Integer choice = printMenu();
+            clearScreen();
+            System.out.println(choice);
+            if (choice > 0 && choice < 9) {
+                switch (choice) {
+                    case 1:
+                        addElementToDatabase(doctorsMap, departmentsMap);
+                        break;
+                    case 2:
+                        editElement(doctorsMap, departmentsMap);
+                        break;
+                    case 3:
+                        getElementById(doctorsMap, departmentsMap);
+                        break;
+                    case 4:
+                        getAll(doctorsMap, departmentsMap);
+                        break;
+                    case 5:
+                        removeElement(doctorsMap, departmentsMap);
+                        break;
+                    case 6:
+                        /*                    setSalary(doctorsMap);*/
+                        break;
+                    case 7:
+                        getElementByName(doctorsMap, departmentsMap);
+                        break;
+                }
+                System.out.println("Press enter to continue...");
+                System.in.read();
+            } else System.out.println("Wrong number, choose again.");
+        }
     }
-}
 
     private static void getAll(Bucket doctors, Bucket departments) throws IOException {
         System.out.println("Getting all values");
@@ -85,17 +64,11 @@ public static void main(String[] args) throws IOException {
             switch (s) {
                 case 1:
                     N1qlQueryResult result = doctors.query(N1qlQuery.simple("SELECT * FROM `doctors`"));
-                    for (N1qlQueryRow row : result) {
-                        String Name = row.value().getString("firstName");
-                        System.out.println(Name);
-                    }
+                    result.allRows().forEach(System.out::println);
                     break;
                 case 2:
                     N1qlQueryResult result2 = departments.query(N1qlQuery.simple("SELECT * FROM `departments`"));
-                    for (N1qlQueryRow row : result2) {
-                        String Name = row.value().getString("firstName");
-                        System.out.println(Name);
-                    }
+                    result2.allRows().forEach(System.out::println);
                     break;
             }
         } else System.out.println("Wrong number, choose again.");
@@ -129,19 +102,13 @@ public static void main(String[] args) throws IOException {
             switch (s) {
                 case 1:
                     String doctorName = scanner.next();
-                    N1qlQueryResult result = doctors.query(N1qlQuery.simple(String.format("SELECT * FROM `doctors` d WHERE d.firstName = %s", doctorName)));
-                    for (N1qlQueryRow row : result) {
-                        String Name = row.value().getString("firstName");
-                        System.out.println(Name);
-                    }
+                    N1qlQueryResult result = doctors.query(N1qlQuery.simple("SELECT * FROM `doctors` d WHERE d.firstName = `"+doctorName+"`;"));
+                    result.allRows().forEach(System.out::println);
                     break;
                 case 2:
                     String departmentName = scanner.next();
-                    N1qlQueryResult result2 = doctors.query(N1qlQuery.simple(String.format("SELECT * FROM `doctors` d WHERE d.firstName = %s", departmentName)));
-                    for (N1qlQueryRow row : result2) {
-                        String Name = row.value().getString("firstName");
-                        System.out.println(Name);
-                    }
+                    N1qlQueryResult result2 = doctors.query(N1qlQuery.simple("SELECT * FROM `doctors` d WHERE d.firstName = `"+departmentName+"`;"));
+                    result2.allRows().forEach(System.out::println);
                     break;
             }
         } else System.out.println("Wrong number, choose again.");
@@ -156,7 +123,7 @@ public static void main(String[] args) throws IOException {
             switch (s) {
                 case 1:
                     String playerId = scanner.next();
-                    Doctor doctor = getDoctorFromUser( scanner);
+                    Doctor doctor = getDoctorFromUser(scanner);
                     JsonObject arthur = JsonObject.create()
                             .put("firstName", doctor.getFirstName())
                             .put("lastName", doctor.getLastName());
@@ -164,10 +131,10 @@ public static void main(String[] args) throws IOException {
                     break;
                 case 2:
                     String departmentId = scanner.next();
-                    Department department = getSportDepartment( scanner);
+                    Department department = getSportDepartment(scanner);
                     JsonObject arthur2 = JsonObject.create()
                             .put("name", department.getName());
-                    doctors.upsert(JsonDocument.create(departmentId, arthur2));
+                    departments.upsert(JsonDocument.create(departmentId, arthur2));
                     break;
             }
         } else System.out.println("Wrong number, choose again.");
@@ -202,19 +169,21 @@ public static void main(String[] args) throws IOException {
         if (s > 0 && s < 3) {
             switch (s) {
                 case 1:
-                    Doctor doctor = getDoctorFromUser( scanner);
+                    Doctor doctor = getDoctorFromUser(scanner);
+                    String id = String.valueOf(UUID.randomUUID());
                     JsonObject arthur = JsonObject.create()
+                            .put("id", id)
                             .put("firstName", doctor.getFirstName())
                             .put("lastName", doctor.getLastName());
-                    String id = String.valueOf(UUID.randomUUID());
                     doctors.upsert(JsonDocument.create(id, arthur));
                     break;
                 case 2:
-                    Department department = getSportDepartment( scanner);
-                    JsonObject arthur2 = JsonObject.create()
-                            .put("name", department.getName());
+                    Department department = getSportDepartment(scanner);
                     String id2 = String.valueOf(UUID.randomUUID());
-                    doctors.upsert(JsonDocument.create(id2, arthur2));
+                    JsonObject arthur2 = JsonObject.create()
+                            .put("id", id2)
+                            .put("name", department.getName());
+                    departments.upsert(JsonDocument.create(id2, arthur2));
                     break;
             }
         } else System.out.println("Wrong number, choose again.");
